@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -69,14 +68,42 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+	pub fn merge(list_a: LinkedList<T>, list_b: LinkedList<T>) -> Self
+	where
+		T: Ord,
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
-        }
+		let mut a = list_a.start;
+		let mut b = list_b.start;
+		let mut result = LinkedList::new();
+
+		while a.is_some() || b.is_some() {
+			let take_a = match (a, b) {
+				(Some(_), None) => true,
+				(None, Some(_)) => false,
+				(Some(pa), Some(pb)) => unsafe { (*pa.as_ptr()).val <= (*pb.as_ptr()).val },
+				(None, None) => false,
+			};
+
+			let node = if take_a {
+				let n = a.unwrap();
+				a = unsafe { (*n.as_ptr()).next };
+				n
+			} else {
+				let n = b.unwrap();
+				b = unsafe { (*n.as_ptr()).next };
+				n
+			};
+
+			unsafe { (*node.as_ptr()).next = None; }
+			let node_opt = Some(node);
+			match result.end {
+				None => result.start = node_opt,
+				Some(end_ptr) => unsafe { (*end_ptr.as_ptr()).next = node_opt },
+			}
+			result.end = node_opt;
+			result.length += 1;
+		}
+		result
 	}
 }
 
